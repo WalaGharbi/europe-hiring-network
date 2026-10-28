@@ -1,0 +1,5 @@
+import {createClient} from '@supabase/supabase-js';
+export async function session(req:Request){const token=req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];if(!token)return null;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;if(!url||!key)return null;const db=createClient(url,key,{global:{headers:{Authorization:'Bearer '+token}},auth:{persistSession:false,autoRefreshToken:false}});const {data:{user},error}=await db.auth.getUser(token);if(error||!user)return null;const {data:admin}=await db.rpc('is_recruiter');return {db,user,admin:admin===true}}
+export const denied=()=>Response.json({error:'Please sign in with an authorized account.'},{status:403});
+export function originOK(req:Request){const origin=req.headers.get('origin');const expected=process.env.APP_ORIGIN||new URL(req.url).origin;return origin===expected}
+export const fail=(error:{message:string}|null)=>Response.json({error:'Unable to save or load this request. Please try again.'},{status:500});

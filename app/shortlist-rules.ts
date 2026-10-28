@@ -1,0 +1,5 @@
+import {z} from 'zod';
+export const candidateSchema=z.object({inquiryId:z.string().uuid(),name:z.string().trim().min(1).max(150),headline:z.string().trim().min(1).max(200),experience:z.string().trim().max(100),skills:z.string().trim().max(1500),summary:z.string().trim().min(20).max(5000),screening:z.string().trim().max(5000),availability:z.string().trim().max(200),rate:z.string().trim().max(200),location:z.string().trim().max(200)});
+export const shareSchema=z.object({id:z.string().uuid(),action:z.literal('visibility'),visibility:z.enum(['draft','shared']),consent:z.boolean().optional()}).refine(x=>x.visibility!=='shared'||x.consent===true,{message:'Confirm candidate permission before sharing.'});
+export const feedbackSchema=z.object({id:z.string().uuid(),action:z.literal('feedback'),feedback:z.enum(['Request interview','Ask a question','Not proceeding']),feedbackNote:z.string().trim().max(3000)}).refine(x=>x.feedback!=='Ask a question'||x.feedbackNote.length>0,{message:'Please enter your question.'});
+export function canReadCandidate(admin:boolean,owner:boolean,visibility:string){return admin||(owner&&visibility==='shared')}

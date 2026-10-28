@@ -1,0 +1,5 @@
+import {z} from 'zod';
+import {session,denied,originOK,fail} from '../../../lib/server';
+const schema=z.object({id:z.string().uuid(),status:z.enum(['Received','Brief confirmed','Sourcing','Shortlist shared','Interviews','Offer / contract','Filled','Closed']),note:z.string().trim().min(1).max(3000)});
+export async function GET(req:Request){const s=await session(req);if(!s?.admin)return denied();const{data,error}=await s.db.from('inquiries').select('*').order('createdAt',{ascending:false});return error?fail(error):Response.json(data,{headers:{'Cache-Control':'no-store'}})}
+export async function PATCH(req:Request){const s=await session(req);if(!s?.admin||!originOK(req))return denied();let b;try{b=schema.parse(await req.json())}catch{return Response.json({error:'Choose a stage and enter an update.'},{status:400})}const {data,error}=await s.db.from('inquiries').update({status:b.status,note:b.note,updatedAt:new Date().toISOString()}).eq('id',b.id).select('id').single();return error?fail(error):Response.json({ok:!!data})}
